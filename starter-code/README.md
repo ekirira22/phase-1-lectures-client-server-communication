@@ -50,7 +50,7 @@ Here's a simple example of using `fetch` to make a network request, using the
 syntax from the [MDN Using Fetch][using fetch] article:
 
 ```js
-fetch("https://pokeapi.co/api/v2/pokemon/1")
+fetch("https://localhost:3000/animals")
   .then((response) => response.json())
   .then((data) => console.log(data));
 ```
@@ -60,11 +60,12 @@ the **data** sent as a response from the server. Now we can use that data to
 update the DOM!
 
 ```js
-fetch("https://pokeapi.co/api/v2/pokemon/1")
-  .then((response) => response.json())
-  .then((data) => {
-    // do DOM updates here!
-    document.querySelector("img").srg = data.sprites.front_sprite;
+fetch("https://localhost:3000/animals")
+  .then((r) => r.json())
+  .then((animalData) => {
+    animalData.forEach((animal) => {
+      renderOneAnimal(animal);
+    });
   });
 ```
 
@@ -75,7 +76,7 @@ fetch("https://pokeapi.co/api/v2/pokemon/1")
 There's a lot going on in these three lines of code, so let's break it down:
 
 ```js
-fetch("https://pokeapi.co/api/v2/pokemon/1")
+fetch("https://localhost:3000/animals")
   .then((response) => response.json())
   .then((data) => console.log(data));
 ```
@@ -101,7 +102,7 @@ Think of it this way:
 That's why we couldn't just write out our code like this:
 
 ```js
-const data = fetch("https://pokeapi.co/api/v2/pokemon/1");
+const data = fetch("https://localhost:3000/animals");
 console.log(data);
 ```
 
@@ -113,7 +114,7 @@ method to work with the value we get back in the future, when we get a response
 from the server.
 
 ```js
-const promise = fetch("https://pokeapi.co/api/v2/pokemon/1");
+const promise = fetch("https://localhost:3000/animals");
 
 promise.then((response) => response.json());
 ```
@@ -233,37 +234,131 @@ have a response from the server_.
 For example, this won't work:
 
 ```js
-let pokemon;
+let animals;
 
 fetch(url)
   .then((r) => r.json())
-  .then((pokemonData) => {
-    pokemon = pokemonData;
+  .then((data) => {
+    animals = data;
   });
 
-// pokemon is undefined!
-render(pokemon);
+// animals is undefined!
+render(animals);
 ```
 
 But this will:
 
 ```js
-let pokemon;
+let animals;
 
 fetch(url)
   .then((r) => r.json())
-  .then((pokemonData) => {
-    pokemon = pokemonData;
-    // pokemon is an object
-    render(pokemon);
+  .then((data) => {
+    animals = data;
+    // animals is an array
+    render(animals);
   });
 ```
+
+## Bonus: Async/Await
+
+ES2017 introduced **async functions** and the **await** keyword for writing
+asynchronous code with Promises, as an alternative syntax for using `.then`.
+Async/await is basically syntactic sugar on top of Promises, but it can make
+code that is easier to read and reason about.
+
+Let's take this code for making a fetch request as an example:
+
+```js
+function getAnimals() {
+  fetch("https://localhost:3000/animals")
+    .then((response) => response.json())
+    .then((data) => console.log(data));
+}
+```
+
+We can make this function an `async` function by adding the `async` keyword:
+
+```js
+async function getAnimals() {
+  fetch("https://localhost:3000/animals")
+    .then((response) => response.json())
+    .then((data) => console.log(data));
+}
+```
+
+You can also write it as an arrow function:
+
+```js
+const getAnimals = async () => {
+  fetch("https://localhost:3000/animals")
+    .then((response) => response.json())
+    .then((data) => console.log(data));
+};
+```
+
+Anywhere we'd normally use `.then` and a callback function to handle a Promise
+resolving, we can use `await` instead:
+
+```js
+const getAnimals = async () => {
+  const response = await fetch("https://localhost:3000/animals");
+  const data = await response.json();
+  console.log(data);
+};
+```
+
+This syntax can make our code easier to follow, since there's no more `.then`
+and no more callbacks to worry about.
+
+One **very important** thing to understand about `async` functions: they will
+**ALWAYS** return a Promise:
+
+```js
+const getAnimals = async () => {
+  const response = await fetch("https://localhost:3000/animals");
+  const data = await response.json();
+  return data;
+};
+
+console.log(getAnimals());
+
+getAnimals().then((data) => console.log(data));
+```
+
+If you want to add some error handling to your async functions, you can use a
+`try/catch` block:
+
+```js
+const getAnimals = async () => {
+  try {
+    const response = await fetch("https://localhost:3000/animals");
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error(`Error in fetch: ${response.statusCode}`);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+```
+
+A couple important notes:
+
+- `await` can only be used in `async` functions
+  - so `await` can't be used in the global scope
+- `async/await` makes your code _look_ more synchronous, but you're still
+  dealing with asynchronous code - so be careful!
 
 ## Resources
 
 - [MDN Using Fetch][using fetch]
 - [MDN Promises][promises]
 - [How JavaScript handles async code][loupe]
+- [javascript.info on async/await](https://javascript.info/async-await)
+- [MDN on async/await](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous/Async_await)
 
 [using fetch]: (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
 [promises]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise

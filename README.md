@@ -54,71 +54,91 @@ It's helpful to frame deliverables in terms of these steps to help students deve
 
 ## Demonstration - `fetch` (10 minutes)
 
-We're going to build a small application that interacts with the Pokemon API so that we can search for Pokemon using their ID, and display their name and sprite on the page.
+We're going to build a small application using `json-server` as a backend
+to display information about animals.
 
-There's a bit of starter code, so walk through that first (`index.html` and `index.js`).
-
-(If you feel the class needs more practice with DOM manipulation and event handling, you can write the code in class as a warm-up exercise).
+There's a bit of starter code, so walk through that first (`index.html` and
+`index.js`).
 
 The deliverable we're building:
 
-> When a user enters a Pokemon ID and submits the form, make a request to the Pokemon API, and display the Pokemon's name and sprite from the response.
+> When the page loads, get a list of animals from our json-server API and
+> display them on the page.
 
-- When X Event Happens (form submit)
-- Do Y Fetch (`GET /pokemons/1`)
-- and Update Z On the DOM (Pokemon name and image)
+- When X Event Happens (page loads)
+- Do Y Fetch (`GET /animals`)
+- and Update Z On the DOM (display all animals)
 
-The DOM manipulation logic is set up in a separate function, so we can call this to demonstrate the goal:
+The DOM manipulation logic is set up in a separate function, so we can call this
+to demonstrate the goal:
 
 ```js
-renderPokemon(
-  "charmander",
-  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"
-);
+// using animalData array from data.js file
+animalData.forEach((animal) => {
+  renderOneAnimal(animal);
+});
 ```
 
-Let's get things working dynamically by fetching the data.
+Let's get things working dynamically by fetching the data instead of using some
+hard-coded data that's only stored in our frontend.
 
-First, show that we can make a GET request in the browser by entering the URL: [https://pokeapi.co/api/v2/pokemon/1](https://pokeapi.co/api/v2/pokemon/1). You can also show the same request in Postman to drive home the point about client-server communication.
+First, show that we can make a GET request in the browser by entering the URL:
+[https://localhost:3000/animals](https://localhost:3000/animals). You can also
+show the same request in Postman to drive home the point about client-server
+communication.
 
-To demonstrate how to use `fetch` as a client, I like to refer to the [MDN Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) page and take their example code, just swapping out the URL with the Pokemon API:
+To demonstrate how to use `fetch` as a client, I like to refer to the
+[MDN Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+page and take their example code, just swapping out the URL with our json-server
+endpoint:
 
 ```js
-fetch("https://pokeapi.co/api/v2/pokemon/1")
+fetch("https://localhost:3000/animals")
   .then((response) => response.json())
   .then((data) => console.log(data));
 ```
 
-Now we can see the same response as we saw in the browser/Postman is available to us in JavaScript, so we can use the data to update the DOM:
+Now we can see the same response as we saw in the browser/Postman is available
+to us in JavaScript, so we can use the data to update the DOM:
 
 ```js
-fetch(`https://pokeapi.co/api/v2/pokemon/${id}`)
+fetch("https://localhost:3000/animals")
   .then((r) => r.json())
-  .then((pokemon) => {
-    renderPokemon(pokemon.name, pokemon.sprites.front_default);
+  .then((animalData) => {
+    animalData.forEach((animal) => {
+      renderOneAnimal(animal);
+    });
   });
 ```
 
 But what is it doing? Let's break it down.
 
 ```js
-fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+fetch("https://localhost:3000/animals");
 ```
 
-`fetch` is a function that's globally available - we can call it in the browser. It takes in a url, and sends a GET request to that url. Let's look at the network tab to see the request happen when we call fetch.
+`fetch` is a function that's globally available - we can call it in the browser.
+It takes in a url, and sends a GET request to that url. Let's look at the
+network tab to see the request happen when we call fetch.
 
 What about `then`?
 
 ```js
   .then((response) => response.json())
-  .then((pokemon) => {
-    renderPokemon(pokemon.name, pokemon.sprites.front_default);
+  .then((animalData) => {
+    animalData.forEach((animal) => {
+      renderOneAnimal(animal);
+    });
   });
 ```
 
-Well, when we fetch data from the server, it doesn't actually happen right away. There might be a second or two while the request is "in flight".
+Well, when we fetch data from the server, it doesn't actually happen right away.
+There might be a second or two while the request is "in flight".
 
-`then` is similar to the way we attach an event listener. With event listeners, we register a callback function to handle the event when it eventually happens. `then` is similar - it takes in a callback function and runs it when the response actually comes back from the server.
+`then` is similar to the way we attach an event listener. With event listeners,
+we register a callback function to handle the event when it eventually happens.
+`then` is similar - it takes in a callback function and runs it when the
+response actually comes back from the server.
 
 ```js
 (response) => response.json();
@@ -126,17 +146,29 @@ Well, when we fetch data from the server, it doesn't actually happen right away.
 
 What about this `.json` method?
 
-Well - the response that we get back from the server isn't always going to be JSON formatted. `fetch` is designed to handle lots of different kinds of HTTP requests and responses. Since we know that the response from our API is going to be formatted as JSON, we can call the `.json` method to parse the response. That effectively turns it from a string into the corresponding javascript object, with native JS strings, booleans, numbers, arrays, and objects all nested within it.
+Well - the response that we get back from the server isn't always going to be
+JSON formatted. `fetch` is designed to handle lots of different kinds of HTTP
+requests and responses. Since we know that the response from our API is going to
+be formatted as JSON, we can call the `.json` method to parse the response. That
+effectively turns it from a string into the corresponding javascript object,
+with native JS strings, booleans, numbers, arrays, and objects all nested within
+it.
 
-You can also show using `.text` on the response instead of `.json` to demonstrate why this step is needed.
+You can also show using `.text` on the response instead of `.json` to
+demonstrate why this step is needed.
 
 ```js
-  .then((pokemon) => {
-    renderPokemon(pokemon.name, pokemon.sprites.front_default);
+  .then((animalData) => {
+    animalData.forEach((animal) => {
+      renderOneAnimal(animal);
+    });
   });
 ```
 
-So, at this last step, we are attaching the callback we want to run when we actually get the data and have parsed it from a response object into a native javascript object. In this callback, `books` will be an array of books, that we got from the server.
+So, at this last step, we are attaching the callback we want to run when we
+actually get the data and have parsed it from a response object into a native
+javascript object. In this callback, `animalData` will be an array of animals
+that we got from the server.
 
 ## Check for Understanding - `fetch` (15 minutes)
 
@@ -385,3 +417,72 @@ fetch(url)
 - They don't explore what the HttpResponse object (`res`) is, and why we invoke the `.json()` method. Its just a pattern-match step.
 - They often define the argument of the second callback to `.then()` as `json`, but don't think much regarding it was a JSON string and we parsed it. They call it `json` and know it is a javascript object, but in pattern matching they think they are interacting with JSON, instead of an object derived from the JSON string.
 - Regarding requests that require headers: they pattern match the headers without knowing what each of the two are for (i.e. 'Content-Type' & 'Accept')
+
+## Bonus: Async/Await
+
+At this point, students have just been introduced to a lot of new syntax and
+concepts. But some students may have already seen `async/await` syntax with
+fetch and may be curious, so this may be a good time to introduce them to this
+syntax and explain how it works.
+
+Start by refactoring some code that uses Promises to the async/await version:
+
+```js
+function getAnimals() {
+  fetch("https://localhost:3000/animals")
+    .then((response) => response.json())
+    .then((data) => console.log(data));
+}
+```
+
+Anywhere we'd normally use `.then` and a callback function to handle a Promise
+resolving, we can use `await` instead:
+
+```js
+async function getAnimals() {
+  const response = await fetch("https://localhost:3000/animals");
+  const data = await response.json();
+  console.log(data);
+}
+```
+
+One common misconception is that returning a value from an async function will
+behave like a normal function; make sure students see that async functions
+**always return a Promise**:
+
+```js
+async function getAnimals() {
+  const response = await fetch("https://localhost:3000/animals");
+  const data = await response.json();
+  return data;
+}
+
+console.log(getAnimals());
+
+getAnimals().then((data) => console.log(data));
+```
+
+If you want to add some error handling to your async functions, you can use a
+`try/catch` block:
+
+```js
+async function getAnimals() {
+  try {
+    const response = await fetch("https://localhost:3000/animals");
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error(`Error in fetch: ${response.statusCode}`);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+```
+
+A couple important notes:
+
+- `await` can only be used in `async` functions
+  - so `await` can't be used in the global scope
+- `async/await` makes your code _look_ more synchronous, but you're still dealing with asynchronous code - so be careful!
