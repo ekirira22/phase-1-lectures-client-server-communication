@@ -4,6 +4,8 @@
 
 document.addEventListener('DOMContentLoaded', initialize)
 
+//2. When 
+
 /******************** Functions ***********************/
 
 function initialize(){
@@ -22,6 +24,11 @@ function initialize(){
     for(const setFreeBtn of setFreeBtns){
         setFreeBtn.addEventListener('click', setFree)
     }
+
+    const donateBtns = document.getElementsByClassName('donate')
+    for(const donateBtn of donateBtns){
+        donateBtn.addEventListener('click', donate)
+    }
     
             
 }
@@ -39,11 +46,11 @@ function addOneAnimal(animal){
                     <strong> Description: </strong>${animal.description}
                 </p><br>
                 <p>
-                    <strong> Donations: </strong>$${animal.donations}
+                    <strong> Donations: </strong>$<span id="donations">${animal.donations}</span>
                 </p>
              </div>
              <div class = 'buttons'>
-                <button id='donate'>Donate</button>
+                <button class='donate'>Donate</button>
                 <button class='setFree'>Set Free</button>
              </div>
 
@@ -53,4 +60,9 @@ function addOneAnimal(animal){
 
 function setFree(e){
     e.target.parentNode.parentNode.parentNode.remove()
+}
+
+function donate(e){
+    const targeted = e.target.parentNode.parentNode
+    console.log(targeted.donations.value)
 }
