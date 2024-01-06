@@ -1,8 +1,7 @@
 const animalData = [
   {
     name: "Red Panda",
-    imageUrl:
-      "https://i1.wp.com/www.redpandanetwork.org/wp-content/uploads/2018/10/Photo-1-for-Give-page.png?fit=584%2C584&ssl=1",
+    imageUrl: "https://redpandanetwork.org/files/_cache/9417c3faab37e22ead4e01b122687b16.jpg",
     description: "not actually a panda",
     donations: 0,
   },

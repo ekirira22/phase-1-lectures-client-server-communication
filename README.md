@@ -8,89 +8,46 @@
 
 ## Outline
 
-```txt
-5 min - Activation - What is a Single Page Application?
-15 min - Demonstration - `fetch`
-15 min - Check for understanding - `fetch`
-5 min - Activation - Asynchronous Code and Promises
-10 min - Demonstration - Asynchronous Code and Promises
-10 min - Check for understanding - execution order
----
-60 min
-```
+- Discuss SPA Architecture
+- Use `fetch` to get data from an API and update the DOM
+- **Exercise** Practice using `fetch` in this [exercise](https://codesandbox.io/s/js-fetch-practice-exercise-ig9u2?file=/README.md)
+- Break down Promise syntax and working with Response
+- Discuss synchronous vs asynchronous code
 
-## Activation - What is a Single Page Application? (5 min)
+## Single Page Applications
 
-Single Page Apps (SPA) Brainstorm
+We want to make our User Experience (UX) feel smooth and responsive. Instead of
+loading an **entire HTML document** for every request, we'll just make a request
+for a small amount of data (JSON) and update the DOM using JavaScript.
 
-Brainstorm / Share. Have students brainstorm a list of applications that load or save data asynchronously, without a page refresh. Have students share their examples. Switch to applications that _do not_ load or save data async (ones that do a full page reload on link click or form submit) and repeat.
+Changes will be made with fetch and it will be asynchronous.
 
-Applications that fetch data asynchronously:
+For example, like Twitter: when you scroll to the bottom of the page, you see
+new tweets! You don't need to go to a whole new page.
 
-- Twitter Feed infinite scroll
-- Instagram Post 'like' heart
+Sometimes we have to wait, but we can have indicators to show us that stuff is
+happening rather than waiting for the entire page to load.
 
-Applications that rerender a whole page (not async):
-
-- Google 'next' search results link
-- Amazon shopping cart checkout
-
-Using their examples, show how a user interaction triggers a network request, which in turn triggers an update to the DOM based on the response.
-
-Example:
-
-- Go to twitter.com/coffee_dad
-- Open the Network tab in the dev tools
-- Scroll to the bottom of the page
-- Show the request that is sent out, and the response (JSON)
-
-Drive home this process as the core of SPA architecture:
+Building SPA features tends to follow the same set of steps:
 
 - When X Event Happens
 - Do Y Fetch
-- And Update Z on the DOM
+- and Update Z on the DOM
 
-It's helpful to frame deliverables in terms of these steps to help students develop a general process to building features in this phase.
+In the Twitter example:
 
-## Demonstration - `fetch` (10 minutes)
+- When (a user scroll) Event Happens
+- Do (GET /user/tweets) Fetch
+- and Update (the list of tweets) on the DOM
 
-We're going to build a small application using `json-server` as a backend
-to display information about animals.
+## Using Fetch
 
-There's a bit of starter code, so walk through that first (`index.html` and
-`index.js`).
+Just like we can make a network request in the browser by visiting a URL; or
+make a network request in Postman; or make a network request from the terminal
+using CURL; we can also make a network request using JavaScript by using `fetch`.
 
-The deliverable we're building:
-
-> When the page loads, get a list of animals from our json-server API and
-> display them on the page.
-
-- When X Event Happens (page loads)
-- Do Y Fetch (`GET /animals`)
-- and Update Z On the DOM (display all animals)
-
-The DOM manipulation logic is set up in a separate function, so we can call this
-to demonstrate the goal:
-
-```js
-// using animalData array from data.js file
-animalData.forEach((animal) => {
-  renderOneAnimal(animal);
-});
-```
-
-Let's get things working dynamically by fetching the data instead of using some
-hard-coded data that's only stored in our frontend.
-
-First, show that we can make a GET request in the browser by entering the URL:
-[https://localhost:3000/animals](https://localhost:3000/animals). You can also
-show the same request in Postman to drive home the point about client-server
-communication.
-
-To demonstrate how to use `fetch` as a client, I like to refer to the
-[MDN Using Fetch](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
-page and take their example code, just swapping out the URL with our json-server
-endpoint:
+Here's a simple example of using `fetch` to make a network request, using the
+syntax from the [MDN Using Fetch][using fetch] article:
 
 ```js
 fetch("https://localhost:3000/animals")
@@ -98,8 +55,9 @@ fetch("https://localhost:3000/animals")
   .then((data) => console.log(data));
 ```
 
-Now we can see the same response as we saw in the browser/Postman is available
-to us in JavaScript, so we can use the data to update the DOM:
+In the third line of code, we'll have access to a JavaScript object representing
+the **data** sent as a response from the server. Now we can use that data to
+update the DOM!
 
 ```js
 fetch("https://localhost:3000/animals")
@@ -111,89 +69,122 @@ fetch("https://localhost:3000/animals")
   });
 ```
 
-But what is it doing? Let's break it down.
+![client-server diagram](./client-server.png)
+
+## Fetch Syntax Explained
+
+There's a lot going on in these three lines of code, so let's break it down:
 
 ```js
-fetch("https://localhost:3000/animals");
-```
-
-`fetch` is a function that's globally available - we can call it in the browser.
-It takes in a url, and sends a GET request to that url. Let's look at the
-network tab to see the request happen when we call fetch.
-
-What about `then`?
-
-```js
+fetch("https://localhost:3000/animals")
   .then((response) => response.json())
-  .then((animalData) => {
-    animalData.forEach((animal) => {
-      renderOneAnimal(animal);
-    });
-  });
+  .then((data) => console.log(data));
 ```
 
-Well, when we fetch data from the server, it doesn't actually happen right away.
-There might be a second or two while the request is "in flight".
+`fetch` is a globally available method in JavaScript. When we call it, we pass
+in a URL (we can also pass some additional options, which we'll explore later).
+This tells the browser to make a **GET request** to the URL we provided.
 
-`then` is similar to the way we attach an event listener. With event listeners,
+### Promises
+
+`fetch` **returns a Promise**, which is a special object in JavaScript that lets
+us work with a value that we'll receive **in the future**. Since there's no
+telling how long a server will take to respond to our request, we can't work
+with the response right away. The **Promise** is the browser's way of letting us
+work with that value in the future.
+
+Think of it this way:
+
+> You order some coffee from a coffeeshop. The barista tells you your coffee
+> will be ready in a few minutes. You don't have the coffee yet - what you have
+> is a **promise** that you'll get some coffee **in the future**.
+
+That's why we couldn't just write out our code like this:
+
+```js
+const data = fetch("https://localhost:3000/animals");
+console.log(data);
+```
+
+### .then
+
+We need some way of handling that data **in the future**, which is what a
+Promise is made for. Since `fetch` returns a Promise, we can use the `.then`
+method to work with the value we get back in the future, when we get a response
+from the server.
+
+```js
+const promise = fetch("https://localhost:3000/animals");
+
+promise.then((response) => response.json());
+```
+
+`.then` is similar to the way we attach an event listener. With event listeners,
 we register a callback function to handle the event when it eventually happens.
-`then` is similar - it takes in a callback function and runs it when the
+`.then` is similar - it takes in a callback function and runs it when the
 response actually comes back from the server.
+
+The callback we use in the **first** `.then` method generally looks like this:
 
 ```js
 (response) => response.json();
 ```
 
+When we get a response from the server, the browser will call the callback
+function we provided, and pass in the **Response** object as the argument.
+
 What about this `.json` method?
 
-Well - the response that we get back from the server isn't always going to be
-JSON formatted. `fetch` is designed to handle lots of different kinds of HTTP
-requests and responses. Since we know that the response from our API is going to
-be formatted as JSON, we can call the `.json` method to parse the response. That
-effectively turns it from a string into the corresponding javascript object,
-with native JS strings, booleans, numbers, arrays, and objects all nested within
-it.
+Well - the response that we get back from the server isn't always going to be JSON formatted. `fetch` is designed to handle lots of different kinds of HTTP requests and responses. Since we know that the response from our API is going to be formatted as JSON, we can call the `.json` method to parse the response. That effectively turns it from a string into the corresponding javascript object, with native JS strings, booleans, numbers, arrays, and objects all nested within it.
 
-You can also show using `.text` on the response instead of `.json` to
-demonstrate why this step is needed.
+For example, if you were working with a server that sent back text instead of a JSON formatted string, you'd do this instead:
 
 ```js
-  .then((animalData) => {
-    animalData.forEach((animal) => {
-      renderOneAnimal(animal);
-    });
+fetch(url)
+  .then((response) => response.text())
+  .then((text) => console.log(text));
+```
+
+### Promise Chain
+
+You'll notice in all the examples that we're calling `.then()` multiple times.
+
+`fetch` returns a Promise, which is why `fetch(url).then(callback)` works.
+
+What do you think `.then()` returns that allows us to call `.then()` again?
+
+That's right - another Promise!
+
+Whatever we return from one `.then` will be passed in as the value to the next:
+
+```js
+fetch(url)
+  .then((response) => {
+    console.log(response);
+    return "chicken";
+  })
+  .then((data) => {
+    console.log(data);
+    return [1, 2, 3];
+  })
+  .then((array) => {
+    console.log(array);
   });
 ```
 
-So, at this last step, we are attaching the callback we want to run when we
-actually get the data and have parsed it from a response object into a native
-javascript object. In this callback, `animalData` will be an array of animals
-that we got from the server.
+## Asynchronous Code
 
-## Check for Understanding - `fetch` (15 minutes)
+One of the biggest challenges of working with `fetch` is that it involves
+working with code that is **asynchronous** instead of **synchronous**.
 
-To give students practice using fetch syntax, give them this [exercise](https://codesandbox.io/s/js-fetch-practice-exercise-ig9u2?file=/README.md).
+Since it will always take a little while for a server to respond to our request:
 
-Solution:
+![client-server diagram](./client-server.png)
 
-```js
-document.querySelector("button").addEventListener("click", () => {
-  fetch(API_URL)
-    .then((r) => r.json())
-    .then((data) => {
-      const img = document.querySelector("img");
-      img.src = data.image;
-    });
-});
-```
+We have to find a way to store code that will run **in the future** instead of
+running immediately.
 
-## Activation - Asynchronous Code and Promises (5 minutes)
-
-> There are a few different ways to motivate learning about promises - if you like to talk about 'callback hell' or demonstrate why we like asynchronous code better than sync (blocking) code, this is the moment to do that.
-
-Tracing what happens in what order in synchronous code is relatively easy.
-
-Have students write down: What will get logged in what order?
+We have a pretty good mental model of what's happening when JavaScript is running synchronous code:
 
 ```js
 console.log("A");
@@ -206,9 +197,7 @@ console.log("C");
 logB();
 ```
 
-It will be A, C, B - since the function is run after we log "C".
-
-Tracing what happens in async code is more challenging. Let's try the same exercise with this code:
+Tracing what happens in async code is challenging:
 
 ```js
 console.log("A");
@@ -220,212 +209,65 @@ fetch(url)
 console.log("C");
 ```
 
-"ACB". Why?
+Even though we called `fetch()` before `console.log("C")`, the code in our
+callback functions won't run until the response is received.
 
-You can also show examples of other async code. This example in particular helps demonstrate the difference between sync/async:
+It's similar to registering a callback for an event handler:
 
 ```js
 console.log("A");
 
-setTimeout(() => {
+document.querySelector("button").addEventListener("click", () => {
   console.log("B");
-}, 0);
+});
 
 console.log("C");
 ```
 
-## Demonstration - Asynchronous Code and Promises (10 minutes)
+We won't see `console.log("B")` _until the button is clicked_. Just like in our
+`fetch` example, we won't see `console.log("C")` _until the response comes
+back_.
 
-Let's take a look at the return value of the fetch method.
+The reason this is important is because we can _only access the data once we
+have a response from the server_.
 
-```js
-const x = fetch(url);
-x;
-//>  Promise {<pending>}
-x;
-//>  Promise {<resolved>}
-```
-
-`x` is a javascript `Promise`. Promises are a container for data that will show up later. They can also tell you about whether the data is there yet.
-
-Promises are a little bit abstract, but you might think of them as
-
-- Online order confirmation email
-- An IOU for a slice of cake
-- Coffee that you've set to brew
-
-The Promise isn't the thing you want - the item you ordered, the slice of cake, a cup of coffee. Instead, it's something that you can hold onto now, that eventually will get filled in with the real value - or not!
-
-Eventually, a JavaScript Promise - like an online order or an IOU - will get resolved. Usually, that means it will be _fulfilled_ - you get the value you wanted. Sometimes, though, instead getting the value you want, the package goes missing, or your friend fails to give you a slice of cake. We say that these promises are _rejected_.
-
-So, a promise can be in three states:
-
-- `pending`
-- `fulfilled`
-- `rejected`
-
-We call a promise 'settled' if it's either fulfilled or rejected - it's no longer pending, it's done one or another.
-
-### `then`
-
-Javascript promises have a few more features we can use.
-
-We can add a handler that runs when the response arrives. When we call the `.then` function, it's like adding an event handler. It's code to run later, when the promise is resolved.
-
-Unlike event handlers, `.then` is chain-able. `.then` always returns a promise, so we can attach more `then` handlers that will run in order.
+For example, this won't work:
 
 ```js
+let animals;
+
 fetch(url)
-  .then(() => console.log("resolved"))
-  .then(() => console.log("after resolved"))
-  .then(() => console.log("after logging after resolved"));
-```
-
-Whatever is returned from the last `.then` will be passed as the value in the callback to the next `.then`:
-
-```js
-fetch(url)
-  .then(() => return "chicken")
+  .then((r) => r.json())
   .then((data) => {
-    console.log(data)
-  })
+    animals = data;
+  });
+
+// animals is undefined!
+render(animals);
 ```
 
-### `catch`
-
-> Working with catch can be treated as bonus content, if students are struggling with the code to this point.
-
-`then` runs when the promise is fulfilled - but what about when it's rejected?
-
-We can use `.catch` to attach a handler for when the promise is rejected.
+But this will:
 
 ```js
-fetch("https://www.google.com").catch((error) =>
-  console.log("Here's the error:", error)
-);
-```
-
-If the fetch doesn't go through, you can add code to let the user know, or try again.
-
-Helpfully, if there's an error within one of our `then` handlers, `catch` will run!
-
-```js
-fetch("https://www.google.com")
-  .then((res) => console.log(value))
-  .catch((error) => console.log("Here's the error:", error));
-// Here's the error: ReferenceError: value is not defined
-//    at fetch.then.res
-```
-
-## Check for Understanding - Asynchronous Code (10 minutes)
-
-Let's return to some tracing examples.
-
-```js
-console.log("A");
-
-fetch(url).then(console.log("B"));
-
-console.log("C");
-```
-
-This is a common mistake that students make. Instead of logging "B" later, we are logging B right away. To fix it, we need to pass in a function instead of calling `console.log`.
-
-Let's return to our tracing example from earlier, this time with an additional twist.
-
-```js
-console.log("A");
+let animals;
 
 fetch(url)
-  .then((res) => {
-    console.log("B");
-    return res.json();
-  })
+  .then((r) => r.json())
   .then((data) => {
-    console.log("C");
-  })
-  .catch(() => console.log("D"));
-
-console.log("E");
-
-setTimeout(() => console.log("F"), 200);
-```
-
-This one has different answers depending on what happens!
-
-There are two things that could differ:
-
-- promise could be fulfilled or rejected
-- promise resolution could be before or after the `setTimeout` callback runs
-
-So, there are four possible scenarios:
-
-- AE BCF
-- AE FBC
-- AE DF
-- AE FD
-
-Note: There could also be an error in the first `then` callback (on parsing the response with `.json`), so there are two more possibilities:
-
-- AE BDF
-- AE FBD
-
-Finally, a more realistic example to think on:
-
-```js
-function getData(url) {
-  console.log("getting data");
-  return fetch(url).then((response) => {
-    console.log("parsing");
-    return response.json();
+    animals = data;
+    // animals is an array
+    render(animals);
   });
-}
-
-function loadClickHandler() {
-  console.log("handling the click of the load button");
-  getData().then((data) => {
-    console.log("got the data");
-    document.querySelector("img").src = data.image;
-  });
-}
-
-console.log("adding event listener to button");
-document
-  .querySelector("#load-button")
-  .addEventListener("click", loadClickHandler);
 ```
-
-## Common Misconceptions and Sticking Points
-
-- `fetch` is only for `GET` (only for retrieving data from the server). It's also for sending data to the server! (next lecture)
-- `fetch` returns [something other than a promise]. Students struggle with asynchrony and promises,
-- Some students struggle with knowing what to do or where to start. A common suggestion is to build out each feature iteratively and think about the features in the context of a user story. For example: “When _some event happens_, I want to make a _what kind of_ fetch call and manipulate the DOM _in what way?_”
-  - When the page loads, I want to make a GET `fetch` render a list of books
-  - When a user clicks the 'Edit' button, I want to make a PATCH `fetch` and update this DOM element
-  - When a user clicks the 'New' button, I want to make a POST `fetch` and render the new dog on the page
-  - When a user clicks this 'Delete' button, I want to make a DELETE `fetch` and remove this element from the DOM
-
-With the following code in mind, which is typical of the average student:
-
-```js
-fetch(url)
-  .then( res => res.json( ) )
-  .then(json => …. )
-```
-
-- Some students think that `.then` is just a method available, as opposed to a method of Promises.
-- They don't explore what the HttpResponse object (`res`) is, and why we invoke the `.json()` method. Its just a pattern-match step.
-- They often define the argument of the second callback to `.then()` as `json`, but don't think much regarding it was a JSON string and we parsed it. They call it `json` and know it is a javascript object, but in pattern matching they think they are interacting with JSON, instead of an object derived from the JSON string.
-- Regarding requests that require headers: they pattern match the headers without knowing what each of the two are for (i.e. 'Content-Type' & 'Accept')
 
 ## Bonus: Async/Await
 
-At this point, students have just been introduced to a lot of new syntax and
-concepts. But some students may have already seen `async/await` syntax with
-fetch and may be curious, so this may be a good time to introduce them to this
-syntax and explain how it works.
+ES2017 introduced **async functions** and the **await** keyword for writing
+asynchronous code with Promises, as an alternative syntax for using `.then`.
+Async/await is basically syntactic sugar on top of Promises, but it can make
+code that is easier to read and reason about.
 
-Start by refactoring some code that uses Promises to the async/await version:
+Let's take this code for making a fetch request as an example:
 
 ```js
 function getAnimals() {
@@ -435,27 +277,49 @@ function getAnimals() {
 }
 ```
 
+We can make this function an `async` function by adding the `async` keyword:
+
+```js
+async function getAnimals() {
+  fetch("https://localhost:3000/animals")
+    .then((response) => response.json())
+    .then((data) => console.log(data));
+}
+```
+
+You can also write it as an arrow function:
+
+```js
+const getAnimals = async () => {
+  fetch("https://localhost:3000/animals")
+    .then((response) => response.json())
+    .then((data) => console.log(data));
+};
+```
+
 Anywhere we'd normally use `.then` and a callback function to handle a Promise
 resolving, we can use `await` instead:
 
 ```js
-async function getAnimals() {
+const getAnimals = async () => {
   const response = await fetch("https://localhost:3000/animals");
   const data = await response.json();
   console.log(data);
-}
+};
 ```
 
-One common misconception is that returning a value from an async function will
-behave like a normal function; make sure students see that async functions
-**always return a Promise**:
+This syntax can make our code easier to follow, since there's no more `.then`
+and no more callbacks to worry about.
+
+One **very important** thing to understand about `async` functions: they will
+**ALWAYS** return a Promise:
 
 ```js
-async function getAnimals() {
+const getAnimals = async () => {
   const response = await fetch("https://localhost:3000/animals");
   const data = await response.json();
   return data;
-}
+};
 
 console.log(getAnimals());
 
@@ -466,7 +330,7 @@ If you want to add some error handling to your async functions, you can use a
 `try/catch` block:
 
 ```js
-async function getAnimals() {
+const getAnimals = async () => {
   try {
     const response = await fetch("https://localhost:3000/animals");
     if (response.ok) {
@@ -478,11 +342,24 @@ async function getAnimals() {
   } catch (e) {
     console.error(e);
   }
-}
+};
 ```
 
 A couple important notes:
 
 - `await` can only be used in `async` functions
   - so `await` can't be used in the global scope
-- `async/await` makes your code _look_ more synchronous, but you're still dealing with asynchronous code - so be careful!
+- `async/await` makes your code _look_ more synchronous, but you're still
+  dealing with asynchronous code - so be careful!
+
+## Resources
+
+- [MDN Using Fetch][using fetch]
+- [MDN Promises][promises]
+- [How JavaScript handles async code][loupe]
+- [javascript.info on async/await](https://javascript.info/async-await)
+- [MDN on async/await](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous/Async_await)
+
+[using fetch]: (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+[promises]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[loupe]: http://latentflip.com/loupe
